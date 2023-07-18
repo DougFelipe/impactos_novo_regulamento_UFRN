@@ -5,7 +5,7 @@ library(readr)
 library(readxl)
 library(openxlsx)
 library(gridExtra)
-
+library(tidyverse)
 ##CARREGANDO BASE DE DADOS DOS CURSOS DA UFRN
 cursos_de_graduacao <-
   read_delim(
@@ -86,6 +86,16 @@ df_filtrado$media_final <- gsub(",", ".", df_filtrado$media_final)
 df_filtrado$media_final <- as.numeric(df_filtrado$media_final)
 #write.xlsx(df_filtrado, "D:/df_filtrado.xlsx")
 
+
+## GARANTINDO QUE A COLUNA "descricao" CONTEM DADOS DE APROVADOS E REPROVADOS CORRETAMENTE
+df_filtrado <- df_filtrado %>%
+  mutate(descricao = case_when(
+    media_final < 5 ~ "REPROVADO",
+    media_final >= 5 & media_final < 7 ~ "APROVADO POR NOTA",
+    TRUE ~ "APROVADO"
+  ))
+
+
 ##ADICIONANDO UM NOVA COLUNA "descricao_nova" que corresponde a simulação da alteração da média de 5 para 6
 df_filtrado <- df_filtrado %>%
   mutate(descricao_nova = case_when(
@@ -102,6 +112,32 @@ count_descricao_nova <- table(df_filtrado$descricao_nova)
 print(count_descricao)
 print(count_descricao_nova)
 
+## GERANDO UM BOXPLOT DA DISTRIBUIÇÃO DO STATUS DE REPROVADO PARA O DF GERAL
+
+ggplot(df_filtrado) +
+  aes(x = "", y = media_final) +
+  geom_jitter(alpha = 0.1, color = ifelse(df_filtrado$media_final < 5, "red", ifelse(df_filtrado$media_final <= 7, "yellow", "green"))) +
+  geom_violin(fill = "grey", alpha = 0.7) +
+  geom_boxplot(fill = "grey", alpha = 0.2) +
+  geom_hline(yintercept = c(5, 7), linetype = "dashed", color = "red", size = 2) +
+  scale_y_continuous(breaks = seq(min(df_filtrado$media_final), max(df_filtrado$media_final), 1)) +
+  labs(title = "Distribuição das Médias Finais",
+       y = "Média Final") +
+  theme_bw()
+
+## GERANDO UM BOXPLOT DA DISTRIBUIÇÃO DO STATUS DE REPROVADO PARA O DF GERAL PELO STATUS DE ARPOVAÇÃO
+temp <- df_filtrado %>% select(media_final,descricao)
+ggplot(temp) +
+  aes(x = descricao, y = media_final) +
+  geom_jitter(alpha = 0.1, color = ifelse(df_filtrado$media_final < 5, "red", ifelse(df_filtrado$media_final <= 7, "yellow", "green"))) +
+  geom_violin(fill = "grey", alpha = 0.7) +
+  geom_boxplot(fill = "grey", alpha = 0.2) +
+  geom_hline(yintercept = c(5, 7), linetype = "dashed", color = "red", size = 2) +
+  scale_y_continuous(breaks = seq(min(df_filtrado$media_final), max(df_filtrado$media_final), 1)) +
+  labs(title = "Distribuição das Médias Finais por status de aprovação",
+       y = "Média Final") +
+  guides(fill = guide_legend(title = "Status")) +
+  theme_bw()
 
 
 # GERANDO O HISTOGRAMA DO DADO GERAL DE 2022 PARA A MÉDIA ANTIGA
@@ -258,7 +294,7 @@ merged_status_curso <- unique(merged_status_curso)
 #write.xlsx(merged_status_curso, "D:/merged_status_curso.xlsx")
 
 ###FAZENDO O PLOT EM CONJUNTO
-###################### ------> IMPLEMENTANDO FUNÇÃO PARA GERAR OS GRÁFICOS DE PORPORÇÃO POR STATUS DE APROVAÇÃO PARA CADA CURSO
+###################### ------> IMPLEMENTANDO FUNÇÃO PARA GERAR OS GRÁFICOS DE PORPORÇÃO POR STATUS DE APROVAÇÃO PARA AREA DE CONHECIMENTO
 
 gerar_grafico <- function(df, titulo, filename) {
   p <- ggplot(df) +
@@ -281,7 +317,7 @@ gerar_grafico <- function(df, titulo, filename) {
           axis.text.x = element_text(size = 20, face = "bold"))
   
   # Salvando o gráfico
-  ggsave(filename, plot = p, path = "D:/Tecnologia da Informação (TI)/P3 2023.1/Probabilidade e Inferência/Projeto ANÁLISE UFRN/Reprovações_area_curso", 
+  ggsave(filename, plot = p, path = "D:/Tecnologia da Informação (TI)/P3 2023.1/Probabilidade e Inferência/Projeto ANÁLISE UFRN/teste", 
          width = 1920/96, height = 1080/96, dpi = 96, device = "jpeg")
 }
 
@@ -498,9 +534,88 @@ ggplot(status_municipio_prop) +
         axis.text.y = element_text(size = 10, face = "bold"),
         axis.text.x = element_text(size = 20, face = "bold"))
 
+################################ VISUALIZANDO AS DISTRIBUIÇÕES EM FORMA DE BOXPLOT,VIOLIN, JITTER
+gerar_grafico <- function(df, titulo, filename) {
+  p <- ggplot(df) +
+    aes(x = nome, y = media_final, fill = descricao) +
+    geom_jitter(alpha = 0.5, color = ifelse(df$media_final < 5, "red", ifelse(df$media_final < 7, "yellow", "green"))) +
+    geom_violin(fill = "grey", alpha = 0.7) +
+    geom_boxplot(fill = "grey", alpha = 0) +
+    geom_hline(yintercept = c(5, 7), linetype = "dashed", color = "red", size = 2) +
+    scale_y_continuous(breaks = seq(min(df$media_final), max(df$media_final), 1)) +
+    labs(title = titulo,
+         x = "Curso",
+         y = "Média Final") +
+    scale_fill_manual(values = c("APROVADO" = "green", "APROVADO POR NOTA" = "yellow", "REPROVADO" = "red")) +
+    theme_bw() +
+    theme(axis.text.x = element_text(size = 15, face = "bold", angle = 45, hjust = 1),
+          axis.text.y= element_text(size = 15, face = "bold"),
+          axis.title = element_text(size = 20, face = "bold"),
+          axis.title.y = element_text(size = 15, face = "bold"),
+          legend.title = element_text(size = 25, face = "bold"),
+          plot.title = element_text(size = 20, face = "bold"),
+          legend.text = element_text(size = 15, face = "bold"),
+          legend.position = "none")
+  
+  # Salvando o gráfico
+  ggsave(file.path("D:/Tecnologia da Informação (TI)/P3 2023.1/Probabilidade e Inferência/Projeto ANÁLISE UFRN/Reprovações_Area_Curso/teste", filename),
+         plot = p, width = 1920/96, height = 1080/96, dpi = 96, device = "jpeg")
+}
+
+# Gerando e salvando os gráficos para cada área de conhecimento
+for (area in unique(df_filtrado$area_conhecimento)) {
+  df_area <- filter(df_filtrado, area_conhecimento == area)
+  filename <- paste0(area, ".jpeg") # cria um nome de arquivo com a área de conhecimento
+  gerar_grafico(df_area, paste("Análise das aprovações e reprovações na área: ", area), filename)
+}
 
 
 teste <- df_filtrado %>%
   select(discente,media_final, nome,descricao, descricao_nova)
 teste <- unique(teste)
 #write.xlsx(teste, "D:/teste_estatisticas.xlsx")
+
+############################ APLICANDO ESTATISTICAS
+# Define the categorization functions
+categorize_grade_old <- function(grade) {
+  if (grade < 5) {
+    return("Reprovado")
+  } else if (grade >= 5 & grade < 7) {
+    return("Aprovado por Nota")
+  } else {
+    return("Aprovado")
+  }
+}
+
+categorize_grade_new <- function(grade) {
+  if (grade < 6) {
+    return("Reprovado")
+  } else if (grade >= 6 & grade < 7) {
+    return("Aprovado por Nota")
+  } else {
+    return("Aprovado")
+  }
+}
+
+# Apply the categorization functions
+df <- df %>%
+  mutate(descricao_old = sapply(media_final, categorize_grade_old),
+         descricao_new = sapply(media_final, categorize_grade_new))
+
+# Convert the education modality to numeric
+df$modalidade_educacao_numeric <- as.numeric(as.factor(df$modalidade_educacao))
+
+# Hypothesis 1: Correlation between the Education Modality and the Final Grade
+correlation <- cor(df$modalidade_educacao_numeric, df$media_final)
+
+# Hypothesis 2: ANOVA between different Knowledge Areas
+anova_result <- aov(media_final ~ area_conhecimento, data = df)
+
+# Hypothesis 3: Chi-Square test of independence for different Municipalities
+contingency_table_municipalities <- table(df$municipio, df$descricao_new)
+chi2_test_municipalities <- chisq.test(contingency_table_municipalities)
+
+print(correlation)
+print(summary(anova_result))
+print(chi2_test_municipalities)
+
