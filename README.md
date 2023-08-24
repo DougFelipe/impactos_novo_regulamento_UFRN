@@ -10,7 +10,7 @@
 
  - script_analise_reprovacao.R:  Corresponde ao script utilizado para manipulação dos dados e obtenção dos resultados
  - Dados_Matriculas.rar: corresponde aos dados obtidos na base https://dados.ufrn.br/dataset/matriculas-componentes referentes ao semestre 2022.1 e 2022.2
--Hisograma_Geral: Corresponde a distribuição das notas levando em consideração o critério antigo e o critério novo para o dado geral
+ - Hisograma_Geral: Corresponde a distribuição das notas levando em consideração o critério antigo e o critério novo para o dado geral
 - Histogramas_Curso: Corresponde a distribuição das notas levando em consideração o critério antigo e o critério novo para cada curso específico
 - Reprovações_Area_Curso: Resultados referentes ao impacto da mudança dos critérios para cada área do conhecimento
 - Reprovações_Grau_Acedemico: Resultados referentes ao impacto da mudança dos critérios para cada grau acadêmico
