@@ -2,7 +2,7 @@
 
 # Confira o relatório completo da análise no PDF abaixo
 
-[Relatório_Mudança_Critério_Notas.pdf](https://github.com/DougFelipe/impactos_novo_regulamento_UFRN/files/12101073/Relatorio_Mudanca_Criterio_Notas.pdf)
+[Relatorio_Mudanca_Criterio_Notas.pdf](https://github.com/DougFelipe/impactos_novo_regulamento_UFRN/files/12432496/Relatorio_Mudanca_Criterio_Notas.pdf)
 
 ## Conteúdo do repositório
 
